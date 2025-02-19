@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Spam Guardian</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --background: #ffffff;
+            --text: #1f2937;
+            --surface: #f3f4f6;
+            --surface-dark: #e5e7eb;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #6366f1;
+                --primary-dark: #818cf8;
+                --background: #111827;
+                --text: #f3f4f6;
+                --surface: #1f2937;
+                --surface-dark: #374151;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .header p {
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 2px solid var(--surface-dark);
+            border-radius: 0.5rem;
+            background: var(--background);
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            padding: 1rem;
+            border: 2px dashed var(--surface-dark);
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .file-label:hover {
+            border-color: var(--primary);
+            background: var(--surface-dark);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            display: none;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .result.spam {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--error);
+        }
+
+        .result.not-spam {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid var(--success);
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: var(--surface-dark);
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .confidence-bar div {
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text);
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> Email Spam Guardian</h1>
+            <p>Protect your inbox with AI-powered spam detection</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-pen"></i> Check Text</h2>
+            <textarea id="emailText" placeholder="Paste your email content here..."></textarea>
+            <button onclick="checkText()" class="btn">
+                <i class="fas fa-search"></i> Analyze Text
+            </button>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-file-alt"></i> Upload File</h2>
+            <label for="emailFile" class="file-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span id="fileLabel">Drop your file here or click to upload</span>
+            </label>
+            <input type="file" id="emailFile" class="file-input">
+            <button onclick="checkFile()" class="btn">
+                <i class="fas fa-search"></i> Analyze File
+            </button>
+        </div>
+
+        <div id="result" class="result">
+            <h3 id="resultTitle"></h3>
+            <p id="resultMessage"></p>
+            <div class="confidence-bar">
+                <div id="confidenceLevel"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Created by Pratama Varian Andika Parulian</p>
+        <p>2207421040 - Politeknik Negeri Jakarta</p>
+    </footer>
+
+    <script>
+        // Get CSS variables
+        const getComputedVariable = (varName) => 
+            getComputedStyle(document.documentElement)
+                .getPropertyValue(varName)
+                .trim();
+
+        // Update file input label
+        document.getElementById('emailFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Drop your file here or click to upload';
+            document.getElementById('fileLabel').textContent = fileName;
+        });
+
+        // Drag and drop support
+        const fileLabel = document.querySelector('.file-label');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileLabel.style.borderColor = getComputedVariable('--primary');
+            fileLabel.style.background = getComputedVariable('--surface-dark');
+        }
+
+        function unhighlight(e) {
+            fileLabel.style.borderColor = '';
+            fileLabel.style.background = '';
+        }
+
+        fileLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            document.getElementById('emailFile').files = dt.files;
+            document.getElementById('fileLabel').textContent = file.name;
+        }
+
+        async function checkText() {
+            const text = document.getElementById('emailText').value;
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
+
+            try {
+                const response = await fetch('/check_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `text=${encodeURIComponent(text)}`
+                });
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while analyzing the text');
+            }
+        }
+
+        async function checkFile() {
+            const fileInput = document.getElementById('emailFile');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/check_file', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while analyzing the file');
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const confidenceLevel = document.getElementById('confidenceLevel');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${data.is_spam ? 'spam' : 'not-spam'}`;
+            
+            resultTitle.innerHTML = `<i class="fas fa-${data.is_spam ? 'exclamation-triangle' : 'check-circle'}"></i> ${data.message}`;
+            resultMessage.textContent = `Confidence: ${(data.confidence * 100).toFixed(2)}%`;
+            
+            confidenceLevel.style.width = `${data.confidence * 100}%`;
+            confidenceLevel.style.background = data.is_spam ? 
+                getComputedVariable('--error') : 
+                getComputedVariable('--success');
+            
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
