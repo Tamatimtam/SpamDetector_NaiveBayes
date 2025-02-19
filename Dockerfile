@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.9.18-slim
 
 # Install system dependencies for python-magic
 RUN apt-get update && apt-get install -y \
@@ -31,7 +31,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV PORT=8080
 
-# Expose portt
+# Expose port
 EXPOSE 8080
 
 # Run the application
